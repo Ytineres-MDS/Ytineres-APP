@@ -1,36 +1,17 @@
-# TypeScript Example
+# Ytineres 🆘📍🎥📞
 
-<p>
-  <!-- iOS -->
-  <img alt="Supports Expo iOS" longdesc="Supports Expo iOS" src="https://img.shields.io/badge/iOS-4630EB.svg?style=flat-square&logo=APPLE&labelColor=999999&logoColor=fff" />
-  <!-- Android -->
-  <img alt="Supports Expo Android" longdesc="Supports Expo Android" src="https://img.shields.io/badge/Android-4630EB.svg?style=flat-square&logo=ANDROID&labelColor=A4C639&logoColor=fff" />
-  <!-- Web -->
-  <img alt="Supports Expo Web" longdesc="Supports Expo Web" src="https://img.shields.io/badge/web-4630EB.svg?style=flat-square&logo=GOOGLE-CHROME&labelColor=4285F4&logoColor=fff" />
-</p>
+Bienvenue sur le projet **Ytineres**, une application mobile développée pour aider les individus dans des situations d'insécurité. Cette application offre plusieurs fonctionnalités qui permettent de signaler rapidement et efficacement une situation d'urgence aux contacts prédéfinis et à la police locale.
 
-```sh
-npx create-react-native-app -t with-typescript
-```
+## Fonctionnalités principales 🎯
 
-TypeScript is a superset of JavaScript which gives you static types and powerful tooling in Visual Studio Code including autocompletion and useful inline warnings for type errors.
+- **Bouton d'alerte d'urgence** 🆘: En appuyant sur un bouton, l'utilisateur peut déclencher une alerte en cas de danger. Cette action enverra une notification à un groupe prédéfini de contacts et à la police locale.
 
-## 🚀 How to use
+- **Suivi de la localisation** 📍: Pour que votre sécurité soit constamment assurée, l'application envoie régulièrement votre localisation à un groupe prédéfini de contacts. De cette façon, vos proches peuvent suivre votre progression et savoir que vous êtes en sécurité.
 
-#### Creating a new project
+- **Enregistrement de la vidéo** 🎥: Lorsqu'une alerte est déclenchée, l'application peut enregistrer une vidéo de la scène en cours. Cela peut être utile pour fournir des preuves supplémentaires en cas de besoin.
 
-- Install the CLI: `npm i -g expo-cli`
-- Create a project: `npx create-react-native-app -t with-typescript`
-- `cd` into the project
+- **Appel vocal d'urgence** 📞: En un seul clic, vous pouvez initier un appel vocal d'urgence à un groupe prédéfini de contacts ou à la police locale. Une communication rapide et efficace peut souvent faire la différence dans une situation d'urgence.
 
-### Adding TypeScript to existing projects
+## Pré-requis 📋
 
-- Create a blank TypeScript config: `touch tsconfig.json`
-- Run `yarn start` or `npm run start` to automatically configure TypeScript
-- Rename files to TypeScript, `.tsx` for React components and `.ts` for plain typescript files
-
-> 💡 You can disable the TypeScript setup in Expo CLI with the environment variable `EXPO_NO_TYPESCRIPT_SETUP=1 expo start`
-
-## 📝 Notes
-
-- [Expo TypeScript guide](https://docs.expo.dev/versions/latest/guides/typescript/)
+Cette application est construite avec React 18.1.0, NodeJS 17 et TypeScript 4.6.3. Assurez-vous d'avoir ces versions installées sur votre système avant de commencer.
