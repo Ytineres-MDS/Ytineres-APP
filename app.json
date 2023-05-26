@@ -1,0 +1,26 @@
+{
+    "expo": {
+        "entryPoint": "./index.js",
+        "name": "Ytineres",
+        "slug": "ytineres-master",
+        "owner": "ytineres-team",
+        "version": "1.0",
+        "scheme": "fr.mds.ytineres",
+        "orientation": "portrait",
+        "updates": {
+            "fallbackToCacheTimeout": 0
+        },
+        "icon": "./assets/Ytineres_Logo.png",
+        "splash": {
+            "image": "./assets/SplashScreen.png",
+            "resizeMode": "cover",
+            "backgroundColor": "#0f111e"
+        },
+        "notification": {
+            "icon": "./assets/Ytineres_Logo.png"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ]
+    }
+}
