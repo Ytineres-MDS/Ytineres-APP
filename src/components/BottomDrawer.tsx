@@ -10,14 +10,15 @@ import {
 } from "react-native";
 import Slider from "@react-native-community/slider";
 import { LinearGradient } from "expo-linear-gradient";
-import Icon from "react-native-vector-icons/FontAwesome";
+import AddDangerZone from "../../assets/icons/Add_Danger_Zone.svg";
+import RemoveDangerZone from "../../assets/icons/Remove_Danger_Zone.svg";
+import { Colors } from "../constant/values";
 
-const BottomSheet = ({ toggleBottomSheet, animatedHeight}) => {
-
+const BottomSheet = ({ toggleBottomSheet, toggleMarkerValidate, setMarkerCircleSize, isOpen }) => {  
   return (
-    <Animated.View style={[styles.bottomSheet, { height: animatedHeight }]}>
+    <Animated.View style={{ height: "100%", width: "100%" }}>
       <LinearGradient
-        colors={["#7338ea", "#4926cb"]}
+        colors={[Colors.PurpleGradientLight, Colors.PurpleGradientDark]}
         style={styles.linearGradient}
       >
         <View style={styles.iconRow}>
@@ -25,7 +26,13 @@ const BottomSheet = ({ toggleBottomSheet, animatedHeight}) => {
             style={styles.iconContainer}
             onPress={toggleBottomSheet}
           >
-            <Icon name="map" size={50} color="white" />
+            <AddDangerZone width={70} height={70} color={isOpen ? "#ff6700" : "#eaeaea"} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.iconContainer}
+            onPress={toggleBottomSheet}
+          >
+            <RemoveDangerZone width={70} height={70} color="#eaeaea" />
           </TouchableOpacity>
         </View>
         <View style={styles.separator} />
@@ -34,25 +41,19 @@ const BottomSheet = ({ toggleBottomSheet, animatedHeight}) => {
           <Slider
             style={{ width: 200, height: 40, flex: 1 }}
             minimumValue={0}
-            maximumValue={1}
+            maximumValue={100}
             minimumTrackTintColor="#FF3900"
             maximumTrackTintColor="#000000"
+            onValueChange={setMarkerCircleSize}
           />
         </View>
-        <Button title="Validate" color="#FF3900" onPress={() => {}} />
+        <Button title="Validate" color="#FF3900" onPress={() => toggleMarkerValidate()} />
       </LinearGradient>
     </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  bottomSheet: {
-    position: "absolute",
-    bottom: 0,
-    width: "100%",
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-  },
   iconContainer: {
     height: 100,
     width: 100,
@@ -64,7 +65,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-    paddingHorizontal: 10,
+    paddingHorizontal: 50,
   },
   linearGradient: {
     flex: 1,

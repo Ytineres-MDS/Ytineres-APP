@@ -10,6 +10,12 @@ import {
 import { LinearGradient } from "expo-linear-gradient";
 import Icon from "react-native-vector-icons/FontAwesome";
 import Background from "../../assets/Background.png";
+import CallPolice from "../../assets/icons/Call_Police.svg";
+import ShareLocation from "../../assets/icons/Share_Location.svg";
+import Alarm from "../../assets/icons/Alarm.svg";
+import ModifyDangerZone from "../../assets/icons/Modify_Danger_Zone.svg";
+import SeeDangerZone from "../../assets/icons/See_Danger_Zone.svg";
+import { Colors } from "../constant/values";
 
 const HomeScreen = ({ navigation }) => {
   const [modalVisible, setModalVisible] = useState(false);
@@ -18,29 +24,40 @@ const HomeScreen = ({ navigation }) => {
     <ImageBackground source={Background} style={styles.background}>
       <View style={styles.circle}>
         <TouchableOpacity style={[styles.button, styles.buttonTop]}>
-          <Icon name="chevron-up" size={30} color="#fff" />
+          <ShareLocation width={60} height={60} />
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.buttonLeft]}
-          onPress={() => navigation.navigate("Map")}
+          onPress={() =>
+            navigation.navigate("Map", {
+              drawerOpen: false,
+            })
+          }
         >
-          <Icon name="chevron-left" size={30} color="#fff" />
+          <SeeDangerZone width={50} height={50} style={{ marginLeft: 10 }} />
         </TouchableOpacity>
         <LinearGradient
-          colors={["#ff3900", "#ff6700"]}
+          colors={[Colors.OrangeGradientLight, Colors.OrangeGradientDark]}
           style={styles.buttonCenter}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
         >
           <TouchableOpacity>
-            <Icon name="home" size={30} color="#fff" />
+            <CallPolice width={80} height={80} />
           </TouchableOpacity>
         </LinearGradient>
-        <TouchableOpacity style={[styles.button, styles.buttonRight]}>
-          <Icon name="chevron-right" size={30} color="#fff" />
+        <TouchableOpacity
+          style={[styles.button, styles.buttonRight]}
+          onPress={() =>
+            navigation.navigate("Map", {
+              drawerOpen: true,
+            })
+          }
+        >
+          <ModifyDangerZone width={60} height={60} />
         </TouchableOpacity>
         <TouchableOpacity style={[styles.button, styles.buttonBottom]}>
-          <Icon name="chevron-down" size={30} color="#fff" />
+          <Alarm width={60} height={60} />
         </TouchableOpacity>
       </View>
 
@@ -99,10 +116,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
   },
   circle: {
-    width: 200,
-    height: 200,
-    borderRadius: 200 / 2,
-    backgroundColor: "black",
+    width: 280,
+    height: 280,
+    borderRadius: 280 / 2,
+    backgroundColor: "#242424",
     justifyContent: "center",
     alignItems: "center",
     position: "relative",
@@ -126,9 +143,9 @@ const styles = StyleSheet.create({
     right: 5,
   },
   buttonCenter: {
-    width: 60,
-    height: 60,
-    borderRadius: 60 / 2,
+    width: 130,
+    height: 130,
+    borderRadius: 130 / 2,
     alignItems: "center",
     justifyContent: "center",
   },
