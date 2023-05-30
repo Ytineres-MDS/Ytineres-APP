@@ -1,5 +1,6 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
-import * as Location from "expo-location";
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import * as Location from 'expo-location';
+import { LocationObject, LocationSubscription } from 'expo-location';
 
 interface LocationContextProps {
   location: Location.LocationObject | null;
@@ -16,26 +17,35 @@ interface LocationProviderProps {
 export const LocationProvider: React.FC<LocationProviderProps> = ({
   children,
 }) => {
-  const [location, setLocation] = useState<Location.LocationObject | null>(
-    null
-  );
+  const [location, setLocation] = useState<LocationObject | null>(null);
 
   useEffect(() => {
-    (async () => {
-      let { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        console.error("Permission to access location was denied");
+    let locationSubscription: LocationSubscription;
+
+    (async (): Promise<void> => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        // eslint-disable-next-line no-console
+        console.error('Permission to access location was denied');
         return;
       }
 
-      let currentLocation = await Location.getCurrentPositionAsync({});
-      while (!currentLocation) {
-        currentLocation = await Location.getCurrentPositionAsync({})
-        console.log(currentLocation);
-      }
-
-      setLocation(currentLocation);
+      locationSubscription = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.High,
+          timeInterval: 5000, // update every 5 seconds
+        },
+        (newLocation) => {
+          setLocation(newLocation);
+          console.log(newLocation);
+        }
+      );
     })();
+
+    // When the component is unmounted, cancel the location subscription
+    return () => {
+      locationSubscription?.remove();
+    };
   }, []);
 
   return (

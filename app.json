@@ -1,26 +1,39 @@
 {
-    "expo": {
-        "entryPoint": "./index.js",
-        "name": "Ytineres",
-        "slug": "ytineres-master",
-        "owner": "ytineres-team",
-        "version": "1.0",
-        "scheme": "fr.mds.ytineres",
-        "orientation": "portrait",
-        "updates": {
-            "fallbackToCacheTimeout": 0
-        },
-        "icon": "./assets/Ytineres_Logo.png",
-        "splash": {
-            "image": "./assets/SplashScreen.png",
-            "resizeMode": "cover",
-            "backgroundColor": "#0f111e"
-        },
-        "notification": {
-            "icon": "./assets/Ytineres_Logo.png"
-        },
-        "assetBundlePatterns": [
-            "**/*"
-        ]
+  "expo": {
+    "entryPoint": "./index.js",
+    "name": "Ytineres",
+    "slug": "ytineres",
+    "owner": "damiendubernet",
+    "version": "1.0",
+    "scheme": "fr.mds.ytineres",
+    "orientation": "portrait",
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "icon": "./assets/Ytineres_Logo.png",
+    "splash": {
+      "image": "./assets/SplashScreen.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#0f111e"
+    },
+    "notification": {
+      "icon": "./assets/Ytineres_Logo.png"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "789d0a00-1ab7-483d-820a-241e6ccadc79"
+      }
+    },
+    "android": {
+      "package": "com.damiendubernet.ytineres",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBLWU-5AaNAE8uu2QFTSooPbct7djJFguY"
+        }
+      }
     }
+  }
 }

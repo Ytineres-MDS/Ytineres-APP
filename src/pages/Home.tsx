@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import {
   View,
   ImageBackground,
@@ -6,18 +6,24 @@ import {
   Modal,
   Text,
   StyleSheet,
-} from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
-import Icon from "react-native-vector-icons/FontAwesome";
-import Background from "../../assets/Background.png";
-import CallPolice from "../../assets/icons/Call_Police.svg";
-import ShareLocation from "../../assets/icons/Share_Location.svg";
-import Alarm from "../../assets/icons/Alarm.svg";
-import ModifyDangerZone from "../../assets/icons/Modify_Danger_Zone.svg";
-import SeeDangerZone from "../../assets/icons/See_Danger_Zone.svg";
-import { Colors } from "../constant/values";
+} from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import Background from '../../assets/Background.png';
+import CallPolice from '../../assets/icons/Call_Police.svg';
+import ShareLocation from '../../assets/icons/Share_Location.svg';
+import Alarm from '../../assets/icons/Alarm.svg';
+import ModifyDangerZone from '../../assets/icons/Modify_Danger_Zone.svg';
+import SeeDangerZone from '../../assets/icons/See_Danger_Zone.svg';
+import { Colors } from '../constant/values';
+import StackNavigatorParams from '../core/stack-navigator-params';
+import { StackNavigationProp } from '@react-navigation/stack';
 
-const HomeScreen = ({ navigation }) => {
+type Props = {
+  navigation: StackNavigationProp<StackNavigatorParams, 'Home'>;
+}
+
+const HomeScreen: React.FC<Props> = ({ navigation })  => {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
@@ -28,8 +34,8 @@ const HomeScreen = ({ navigation }) => {
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.button, styles.buttonLeft]}
-          onPress={() =>
-            navigation.navigate("Map", {
+          onPress={(): void =>
+            navigation.navigate('Map', {
               drawerOpen: false,
             })
           }
@@ -48,8 +54,8 @@ const HomeScreen = ({ navigation }) => {
         </LinearGradient>
         <TouchableOpacity
           style={[styles.button, styles.buttonRight]}
-          onPress={() =>
-            navigation.navigate("Map", {
+          onPress={(): void =>
+            navigation.navigate('Map', {
               drawerOpen: true,
             })
           }
@@ -63,7 +69,7 @@ const HomeScreen = ({ navigation }) => {
 
       <TouchableOpacity
         style={styles.modalButtonContainer}
-        onPress={() => setModalVisible(true)}
+        onPress={(): void => setModalVisible(true)}
       >
         <View style={styles.modalButton}>
           <Icon name="question" size={30} color="#ff3900" />
@@ -74,16 +80,16 @@ const HomeScreen = ({ navigation }) => {
         animationType="slide"
         transparent={true}
         visible={modalVisible}
-        onRequestClose={() => setModalVisible(false)}
+        onRequestClose={(): void => setModalVisible(false)}
       >
         <TouchableOpacity
           style={styles.centeredView}
-          onPress={() => setModalVisible(false)}
+          onPress={(): void => setModalVisible(false)}
           activeOpacity={1}
         >
           <TouchableOpacity
             activeOpacity={1}
-            onPress={(e) => e.stopPropagation()}
+            onPress={(e): void => e.stopPropagation()}
           >
             <View style={styles.modalView}>
               <View style={styles.modalHeader}>
@@ -98,8 +104,8 @@ const HomeScreen = ({ navigation }) => {
                 nulla pariatur. Excepteur sint occaecat cupidatat non proident,
                 sunt in culpa qui officia deserunt mollit anim id est laborum.
               </Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Text style={{ color: "#ff3900" }}>Fermer</Text>
+              <TouchableOpacity onPress={(): void => setModalVisible(false)}>
+                <Text style={{ color: '#ff3900' }}>Fermer</Text>
               </TouchableOpacity>
             </View>
           </TouchableOpacity>
@@ -112,23 +118,23 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   background: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   circle: {
     width: 280,
     height: 280,
     borderRadius: 280 / 2,
-    backgroundColor: "#242424",
-    justifyContent: "center",
-    alignItems: "center",
-    position: "relative",
+    backgroundColor: '#242424',
+    justifyContent: 'center',
+    alignItems: 'center',
+    position: 'relative',
   },
   button: {
-    position: "absolute",
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "transparent",
+    position: 'absolute',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
   },
   buttonTop: {
     top: 5,
@@ -146,22 +152,22 @@ const styles = StyleSheet.create({
     width: 130,
     height: 130,
     borderRadius: 130 / 2,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   centeredView: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginTop: 22,
   },
   modalView: {
     margin: 20,
-    backgroundColor: "white",
+    backgroundColor: 'white',
     borderRadius: 20,
     padding: 35,
-    alignItems: "center",
-    shadowColor: "#000",
+    alignItems: 'center',
+    shadowColor: '#000',
     shadowOffset: {
       width: 0,
       height: 2,
@@ -171,34 +177,34 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   modalHeader: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 15,
   },
   modalTitle: {
     fontSize: 18,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   modalText: {
     marginBottom: 15,
-    textAlign: "justify",
+    textAlign: 'justify',
   },
   modalButtonContainer: {
-    position: "absolute",
+    position: 'absolute',
     bottom: 10,
     right: 10,
   },
   modalButton: {
-    backgroundColor: "#fff",
+    backgroundColor: '#fff',
     borderRadius: 30,
     width: 60,
     height: 60,
     marginRight: 20,
     marginBottom: 20,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });
 

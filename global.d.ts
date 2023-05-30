@@ -1,9 +1,9 @@
 declare module '*.png' {
-    import { ImageSourcePropType } from 'react-native'
+    import { ImageSourcePropType } from 'react-native';
 
-    const content: ImageSourcePropType
+    const content: ImageSourcePropType;
 
-    export default content
+    export default content;
 }
 
 declare module '*.svg' {
