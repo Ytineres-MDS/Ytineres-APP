@@ -1,4 +1,10 @@
-import React, { useContext, useEffect, useRef, useState } from 'react';
+import React, {
+  Fragment,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   View,
   Dimensions,
@@ -6,70 +12,109 @@ import {
   TextInput,
   Animated,
   NativeModules,
+  TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  Text,
 } from 'react-native';
-import { Button, FAB, Icon, SpeedDial } from '@rneui/themed';
-import MapView, { UrlTile, Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Button, FAB, Icon, Slider } from '@rneui/themed';
+import MapView, { Circle, Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LinearGradient } from 'expo-linear-gradient';
-import BottomSheet from '../components/BottomDrawer';
-import YtineresWhite from '../../assets/Ytineres_Logo_White.svg';
-import CallPolice from '../../assets/icons/Call_Police.svg';
-import ShareLocation from '../../assets/icons/Share_Location.svg';
-import Alarm from '../../assets/icons/Alarm.svg';
 import Stickman from '../../assets/icons/stickman.svg';
 import { Colors } from '../constant/values';
-import { LocationContext } from '../providers/LocationContext';
 import uuid from 'react-native-uuid';
 import { StackNavigationProp } from '@react-navigation/stack';
 import StackNavigatorParams from '../core/stack-navigator-params';
 import { RouteProp } from '@react-navigation/native';
 import { getDistance } from 'geolib';
+import YtineresDial from '../components/YtineresDial';
+import { LocationContext } from '../providers/LocationContext';
+import AddDangerZone from '../../assets/icons/Add_Danger_Zone.svg';
+import RemoveDangerZone from '../../assets/icons/Remove_Danger_Zone.svg';
+import MarkerCircle from '../components/MarkerCircle';
 
 type MapScreenProps = {
   navigation: StackNavigationProp<StackNavigatorParams, 'Map'>;
   route: RouteProp<StackNavigatorParams, 'Map'>;
 };
 
+type DangerZone = {
+  id: string;
+  latitude: number;
+  longitude: number;
+  name: string;
+  radius: number;
+};
+
+const statusBarHeight = NativeModules.StatusBarManager.HEIGHT;
+const mapAnimatedHeight =
+  Dimensions.get('window').height -
+  Dimensions.get('window').height / 6 -
+  statusBarHeight;
+const animatedInitialHeight =
+  Dimensions.get('window').height / 6 - statusBarHeight - 100;
+const animatedFinalHeight =
+  Dimensions.get('window').height / 6 - statusBarHeight - 300;
+
 const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
   const { drawerOpen } = route.params;
   const { location } = useContext(LocationContext);
 
-  const [isSpeedDialOpen, setIsSpeedDialOpen] = useState(false);
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
-  const [isOpen, setIsOpen] = useState(drawerOpen);
+  const [isOpen, setIsOpen] = useState(false);
   const [isCentered, setIsCentered] = useState(false);
-  const [dangerZones, setDangerZones] = useState([]);
+  const [dangerZones, setDangerZones] = useState<DangerZone[]>([]);
   const [selectedMarkerId, setSelectedMarkerId] = useState<string | null>(null);
-
-  const [newZoneName, setNewZoneName] = useState('');
-  const [newZoneRadius, setNewZoneRadius] = useState(100);
   const [isNewZoneValidated, setIsNewZoneValidated] = useState(false);
+  const [tempZone, setTempZone] = useState<DangerZone | null>(null);
+  const [tempZoneRadius, setTempZoneRadius] = useState(0);
+  const [keyboardHeight, setKeyboardHeight] = useState(0);
+  const [showNotification, setShowNotification] = useState(false);
 
   const { StatusBarManager } = NativeModules;
 
-  const animatedHeight = useState(
-    new Animated.Value(
-      Dimensions.get('window').height / 6 - StatusBarManager.HEIGHT - 100
-    )
-  )[0];
-  const mapHeight = useState(
-    new Animated.Value(
-      Dimensions.get('window').height -
-        Dimensions.get('window').height / 6 -
-        StatusBarManager.HEIGHT -
-        100
-    )
-  )[0];
+  const animatedHeight = useState(new Animated.Value(animatedInitialHeight))[0];
 
-  const mapRef = useRef(null);
-  
+  const mapHeight = useState(new Animated.Value(mapAnimatedHeight - 100))[0];
+
+  const mapRef = useRef<MapView | null>(null);
 
   useEffect(() => {
+    if (drawerOpen) {
+      setIsOpen(true);
+      if (!isOpen) handleAddTempZone();
+    } else {
+      setIsOpen(false);
+    }
+  }, [drawerOpen]);
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      (e) => setKeyboardHeight(e.endCoordinates.height)
+    );
+
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => setKeyboardHeight(0)
+    );
+
+    return () => {
+      keyboardDidShowListener.remove();
+      keyboardDidHideListener.remove();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen && tempZone) {
+      setTempZone(null);
+    }
+
     Animated.timing(animatedHeight, {
-      toValue: isOpen
-        ? Dimensions.get('window').height / 6 - StatusBarManager.HEIGHT - 300
-        : Dimensions.get('window').height / 6 - StatusBarManager.HEIGHT - 100,
+      toValue: isOpen ? animatedFinalHeight : animatedInitialHeight,
       duration: 500,
       useNativeDriver: false,
     }).start();
@@ -92,7 +137,7 @@ const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
   useEffect(() => {
     (async (): Promise<void> => {
       if (!isCentered && location) {
-        mapRef.current.animateToRegion(
+        mapRef.current?.animateToRegion(
           {
             latitude: location.coords.latitude,
             longitude: location.coords.longitude,
@@ -101,7 +146,6 @@ const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
           },
           1000
         );
-
         setIsCentered(true);
       }
     })();
@@ -111,241 +155,256 @@ const MapScreen: React.FC<MapScreenProps> = ({ navigation, route }) => {
     };
   }, [location]);
 
-  useEffect(() => {
-    console.log(selectedMarkerId);
-    
-  }, [selectedMarkerId]);
+  const handleAddTempZone = (): void => {
+    // Check if user is already in a zone
+    const userInZone = dangerZones.some((zone) => {
+      const distance = getDistance(
+        {
+          latitude: location.coords.latitude,
+          longitude: location.coords.longitude,
+        },
+        { latitude: zone.latitude, longitude: zone.longitude }
+      );
   
-
-  const handleAddDangerZone = (): void => {
-    const newZone = {
-      id: uuid.v4(),
-      latitude: location.coords.latitude,
-      longitude: location.coords.longitude,
-      name: '',
-      radius: 100,
-    };
-
-    setDangerZones((currentZones) => [...currentZones, newZone]);
-    setIsNewZoneValidated(false);
+      return distance <= zone.radius;
+    });
+  
+    // Only create a new zone if the user is not already in a zone
+    if (!userInZone) {
+      setTempZone({
+        id: uuid.v4().toString(),
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        name: '',
+        radius: 100,
+      });
+      setIsNewZoneValidated(false);
+      setShowNotification(false);
+    } else {
+      setIsOpen(false);
+      setShowNotification(true);
+      setTimeout(() => {
+        setShowNotification(false);
+      }, 5000);
+    }
   };
 
   const toggleBottomSheet = (): void => {
     setIsOpen(!isOpen);
-    if (!isOpen) handleAddDangerZone();
-    else if (!isNewZoneValidated) removeSelectedMarker();
+    if (!isOpen) handleAddTempZone();
   };
 
   const handleMarkerPress = (id: string): void => {
     setSelectedMarkerId(id);
   };
 
-  const removeSelectedMarker = (): void => {
-    if (selectedMarkerId) {
-      setDangerZones((currentZones) => currentZones.filter((zone) => zone.id !== selectedMarkerId));
-      setSelectedMarkerId(null);
+  const handleValidateZone = (): void => {
+    if (tempZone) {
+      setDangerZones((currentZones) => [
+        ...currentZones,
+        { ...tempZone, radius: tempZoneRadius },
+      ]);
+      setTempZone(null);
+      toggleBottomSheet();
     }
   };
 
-  const toggleMarkerValidate = (): void => {
-    setIsNewZoneValidated(true);
-    setIsOpen(false);
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={[Colors.PurpleGradientLight, Colors.PurpleGradientDark]}
-        style={styles.topBar}
-      >
-        <Button
-          icon={<Icon name="arrow-left" type="font-awesome-5" color="white" />}
-          type="clear"
-          onPress={(): void => navigation.goBack()}
-        />
-        <View style={styles.inputContainer}>
-          <View style={styles.textbox}>
-            <TextInput
-              placeholder="Start"
-              value={origin}
-              onChangeText={setOrigin}
-              style={styles.input}
-            />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      style={styles.container}
+    >
+      <SafeAreaView style={styles.container}>
+        <LinearGradient
+          colors={[Colors.PurpleGradientLight, Colors.PurpleGradientDark]}
+          style={styles.topBar}
+        >
+          <Button
+            icon={
+              <Icon name="arrow-left" type="font-awesome-5" color="white" />
+            }
+            type="clear"
+            onPress={(): void => navigation.goBack()}
+          />
+          <View style={styles.inputContainer}>
+            <View style={styles.textbox}>
+              <TextInput
+                placeholder="Start"
+                value={origin}
+                onChangeText={setOrigin}
+                style={styles.input}
+              />
+            </View>
+            <View style={styles.textbox}>
+              <TextInput
+                placeholder="End"
+                value={destination}
+                onChangeText={setDestination}
+                style={styles.input}
+              />
+            </View>
           </View>
-          <View style={styles.textbox}>
-            <TextInput
-              placeholder="End"
-              value={destination}
-              onChangeText={setDestination}
-              style={styles.input}
-            />
-          </View>
-        </View>
-        <Button
-          title="Search"
-          onPress={(): void => {
-            /* Implement search functionality */
-          }}
-          ViewComponent={LinearGradient}
-          linearGradientProps={{
-            colors: [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
-            start: { x: 0, y: 0 },
-            end: { x: 1, y: 0 },
-          }}
-        />
-      </LinearGradient>
-
-      <Animated.View style={{ height: mapHeight }}>
-        <MapView
-          ref={mapRef}
-          style={{ flex: 1 }}
-          region={{
-            latitude: location.coords.latitude ?? 47.478419,
-            longitude: location.coords.longitude ?? -0.563166,
-            latitudeDelta: 0.0922,
-            longitudeDelta: 0.0421,
-          }}
-          provider={PROVIDER_GOOGLE}
-          onPress={(event): void => {
-            const coordinates = event.nativeEvent.coordinate;
-            dangerZones.map(zone => {
-              const distance = getDistance(
-                { latitude: coordinates.latitude, longitude: coordinates.longitude },
-                { latitude: zone.latitude, longitude: zone.longitude }
-              );
-    
-              if (distance <= zone.radius) {
-                handleMarkerPress(zone.id);
-              } else {
-                handleMarkerPress(null);
-              }
-            });
+          <Button
+            title="Search"
+            onPress={(): void => {
+              /* Implement search functionality */
+            }}
+            ViewComponent={LinearGradient}
+            linearGradientProps={{
+              colors: [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
+              start: { x: 0, y: 0 },
+              end: { x: 1, y: 0 },
+            }}
+          />
+        </LinearGradient>
+        <Animated.View
+          style={{
+            height: Animated.add(
+              mapHeight,
+              new Animated.Value(-keyboardHeight)
+            ),
           }}
         >
-          <UrlTile
-            urlTemplate={'http://c.tile.openstreetmap.org/{z}/{x}/{y}.png'}
-            maximumZ={19}
-            flipY={false}
-          />
-          {dangerZones.map((zone) => (
-            <>
-              <Marker
+          <MapView
+            ref={mapRef}
+            provider={PROVIDER_GOOGLE}
+            style={{ maxHeight: '100%', flex: 1 }}
+            region={{
+              latitude: location.coords.latitude || 47.478419,
+              longitude: location.coords.longitude || -0.563166,
+              latitudeDelta: 0.0922,
+              longitudeDelta: 0.0421,
+            }}
+            onPress={(event): void => {
+              const coordinates = event.nativeEvent.coordinate;
+              dangerZones.map((zone) => {
+                const distance = getDistance(
+                  {
+                    latitude: coordinates.latitude,
+                    longitude: coordinates.longitude,
+                  },
+                  { latitude: zone.latitude, longitude: zone.longitude }
+                );
+
+                if (distance <= zone.radius) {
+                  handleMarkerPress(zone.id);
+                } else {
+                  handleMarkerPress(null);
+                }
+              });
+            }}
+          >
+            {dangerZones.map((zone) => (
+              <MarkerCircle
                 key={zone.id}
-                coordinate={{
-                  latitude: zone.latitude,
-                  longitude: zone.longitude,
-                }}
+                latitude={zone.latitude}
+                longitude={zone.longitude}
+                radius={zone.radius}
+                color="rgba(255, 0, 0, 0.5)"
                 onPress={(): void => handleMarkerPress(zone.id)}
               />
-              <Circle
-                center={{
-                  latitude: zone.latitude,
-                  longitude: zone.longitude,
-                }}
-                radius={zone.radius}
-                fillColor={'rgba(255, 0, 0, 0.5)'}
+            ))}
+            {tempZone && (
+              <MarkerCircle
+                key={tempZone.id}
+                latitude={tempZone.latitude}
+                longitude={tempZone.longitude}
+                radius={tempZoneRadius}
+                color="rgba(0, 0, 255, 0.5)"
               />
-            </>
-          ))}
-          {location && (
-            <Marker
-              coordinate={{
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-              }}
-              title="Ma position"
-            >
-              <Stickman width={60} height={60} />
-            </Marker>
+            )}
+            {location && (
+              <Marker
+                coordinate={{
+                  latitude: location.coords.latitude,
+                  longitude: location.coords.longitude,
+                }}
+                title="Ma position"
+              >
+                <Stickman width={60} height={60} />
+              </Marker>
+            )}
+          </MapView>
+          <YtineresDial />
+          <FAB
+            visible={location !== null}
+            onPress={(): void => {
+              mapRef.current?.animateToRegion(
+                {
+                  latitude: location.coords.latitude || 47.478419,
+                  longitude: location.coords.longitude || -0.563166,
+                  latitudeDelta: 0.005,
+                  longitudeDelta: 0.005,
+                },
+                1000
+              );
+            }}
+            placement="left"
+            icon={{ name: 'my-location', color: 'black' }}
+            color="white"
+          />
+          {showNotification && (
+            <View style={styles.notificationContainer}>
+              <Text style={styles.notificationText}>
+      Vous êtes déjà dans une zone marquée !
+              </Text>
+            </View>
           )}
-        </MapView>
-        <SpeedDial
-          isOpen={isSpeedDialOpen}
-          icon={<YtineresWhite width={40} height={40} />}
-          openIcon={<Icon name="times" type="font-awesome-5" color="#FFF" />}
-          onOpen={(): void => setIsSpeedDialOpen(!isSpeedDialOpen)}
-          onClose={(): void => setIsSpeedDialOpen(!isSpeedDialOpen)}
-          style={styles.speedDial}
-          ViewComponent={LinearGradient}
-          linearGradientProps={{
-            colors: isSpeedDialOpen
-              ? [Colors.PurpleGradientLight, Colors.PurpleGradientDark]
-              : [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
-            start: { x: 0, y: 0 },
-            end: { x: 1, y: 0 },
-          }}
-        >
-          <SpeedDial.Action
-            icon={<Alarm width={30} height={30} />}
-            title="Menu 1"
-            ViewComponent={LinearGradient}
-            linearGradientProps={{
-              colors: [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
-              start: { x: 0, y: 0 },
-              end: { x: 1, y: 0 },
-            }}
-            onPress={(): void => {
-              /* Implement menu 1 functionality */
-            }}
-          />
-          <SpeedDial.Action
-            icon={<ShareLocation width={30} height={30} />}
-            title="Menu 2"
-            ViewComponent={LinearGradient}
-            linearGradientProps={{
-              colors: [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
-              start: { x: 0, y: 0 },
-              end: { x: 1, y: 0 },
-            }}
-            onPress={(): void => {
-              /* Implement menu 2 functionality */
-            }}
-          />
-          <SpeedDial.Action
-            icon={<CallPolice width={30} height={30} />}
-            title="Menu 3"
-            ViewComponent={LinearGradient}
-            linearGradientProps={{
-              colors: [Colors.OrangeGradientLight, Colors.OrangeGradientDark],
-              start: { x: 0, y: 0 },
-              end: { x: 1, y: 0 },
-            }}
-            onPress={(): void => {
-              /* Implement menu 3 functionality */
-            }}
-          />
-        </SpeedDial>
-        <FAB
-          visible={location !== undefined}
-          onPress={(): void => {
-            mapRef.current.animateToRegion(
-              {
-                latitude: location.coords.latitude,
-                longitude: location.coords.longitude,
-                latitudeDelta: 0.005,
-                longitudeDelta: 0.005,
-              },
-              1000
-            );
-          }}
-          placement="left"
-          icon={{ name: 'my-location', color: 'black' }}
-          color="white"
-        />
-      </Animated.View>
+        </Animated.View>
 
-      <Animated.View style={{ flex: animatedHeight }}>
-        <BottomSheet
-          toggleBottomSheet={toggleBottomSheet}
-          toggleMarkerValidate={toggleMarkerValidate}
-          isOpen={isOpen}
-          newZoneName={newZoneName}
-          setNewZoneName={setNewZoneName}
-          newZoneRadius={newZoneRadius}
-          setNewZoneRadius={setNewZoneRadius}
-        />
-      </Animated.View>
-    </SafeAreaView>
+        <Animated.View style={{ height: 300, width: '100%' }}>
+          <LinearGradient
+            colors={[Colors.PurpleGradientLight, Colors.PurpleGradientDark]}
+            style={styles.linearGradient}
+          >
+            <View style={styles.iconRow}>
+              <TouchableOpacity
+                style={styles.iconContainer}
+                onPress={toggleBottomSheet}
+              >
+                <AddDangerZone
+                  width={70}
+                  height={70}
+                  color={isOpen ? '#ff6700' : '#eaeaea'}
+                />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.iconContainer}
+                onPress={handleValidateZone}
+              >
+                <RemoveDangerZone width={70} height={70} color="#eaeaea" />
+              </TouchableOpacity>
+            </View>
+            <View style={styles.separator} />
+            <TextInput
+              style={styles.inputBox}
+              placeholder="Enter something..."
+              value={tempZone ? tempZone.name : ''}
+              onChangeText={(text): void => {
+                if (tempZone) setTempZone({ ...tempZone, name: text });
+              }}
+            />
+            <View style={styles.row}>
+              <Slider
+                style={{ width: 200, height: 40, flex: 1 }}
+                minimumValue={0}
+                maximumValue={100}
+                minimumTrackTintColor="#FF3900"
+                maximumTrackTintColor="#000000"
+                step={1}
+                value={tempZoneRadius}
+                onValueChange={setTempZoneRadius}
+              />
+            </View>
+            <Button
+              title="Validate"
+              color="#FF3900"
+              onPress={handleValidateZone}
+            />
+          </LinearGradient>
+        </Animated.View>
+      </SafeAreaView>
+    </KeyboardAvoidingView>
   );
 };
 
@@ -387,10 +446,60 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     padding: 10,
   },
-  speedDial: {
+  iconContainer: {
+    height: 100,
+    width: 100,
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  iconRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+    paddingHorizontal: 50,
+  },
+  linearGradient: {
+    flex: 1,
+    paddingLeft: 15,
+    paddingRight: 15,
+    borderRadius: 5,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+  },
+  separator: {
+    height: 1,
+    width: '100%',
+    backgroundColor: '#FFFFFF',
+    marginVertical: 10,
+  },
+  inputBox: {
+    height: 40,
+    borderColor: 'gray',
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    backgroundColor: '#FFFFFF',
+    width: '100%',
+    marginBottom: 10,
+  },
+  row: {
+    flexDirection: 'row',
+    marginBottom: 10,
+  },
+  notificationContainer: {
     position: 'absolute',
-    bottom: 0,
+    top: 0,
+    left: 0,
     right: 0,
+    padding: 10,
+    backgroundColor: 'red', // or any other color
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 999,
+  },
+  notificationText: {
+    color: 'white', // or any other color
   },
 });
 
