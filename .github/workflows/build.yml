@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Release APK with EAS
 
 on:
   push:
@@ -13,40 +13,37 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18.x
+          cache: yarn
 
       - name: Install Dependencies
         run: yarn install
 
-      - name: Setup Java
-        uses: actions/setup-java@v2
+      - name: Install Expo and EAS CLI
+        run: |
+          npm install -g expo-cli
+          npm install -g eas-cli
+
+      - name: Setup Expo and EAS
+        uses: expo/expo-github-action@v8
         with:
-          distribution: 'adopt'
-          java-version: 11
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
 
       - name: Build Android Release
+        run: eas build --platform android --profile release
+
+      - name: Get build URL and Download APK
+        id: get_url
         run: |
-          cd android
-          ./gradlew assembleRelease
+          URL=$(eas build --platform android --non-interactive | grep -o 'https://expo.dev/artifacts/[^ ]*' | head -n 1)
+          echo "URL=$URL" >> $GITHUB_ENV
+          curl -Lo app.apk $URL
 
-      - name: Upload APK as Artifact
-        uses: actions/upload-artifact@v2
+      - name: Create a Release APK
+        uses: ncipollo/release-action@v1
         with:
-          name: app
-          path: android/app/build/outputs/apk/release/app-release.apk
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download APK
-        uses: actions/download-artifact@v2
-        with:
-          name: app
-
-      - name: Create and Upload Release
-        uses: softprops/action-gh-release@v1
-        with:
-          files: ./app/app-release.apk
+          artifacts: "./app.apk"
+          token: ${{ secrets.TOKEN }}
