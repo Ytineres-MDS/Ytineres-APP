@@ -32,10 +32,7 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
-      - name: Build Android Release
-        run: eas build --platform android --profile release
-
-      - name: Get build URL and Download APK
+      - name: Build Android Release & Get build URL & Download APK
         id: get_url
         run: |
           URL=$(eas build --platform android --non-interactive | grep -o 'https://expo.dev/artifacts/[^ ]*' | head -n 1)
